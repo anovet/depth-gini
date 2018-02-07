@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 require(tidyverse)
 require(ineq)
 require(janitor)
+require(ggthemes)
 ```
 
 ##Setup
@@ -29,7 +30,7 @@ dat2 <- select(dat1, player, team, position, gp, toi, cf_60, ca_60) %>%
 
 table(dat2$toi_rank) #NST successfully split traded players
 filter(dat2, position == "F") %>% select(toi_position_rank) %>% table(.)
-#For forwards, we start losing some teams at the 15th player (1 team has 13 only).
+#For forwards, we start losing some teams at the 16th player (1 team has 13 only).
 
 sixteenth <- filter(dat2, toi_position_rank == 16)
 fullest <- anti_join(distinct(dat2, team), sixteenth)
@@ -38,5 +39,27 @@ nsh <- filter(dat2, team == "NSH")
 
 isles <- filter(dat2, team == "NYI")
 #Best F cutoff looks like the top 16, which is everyone except Dal Colle, Bernier, and Johnston, who have played 4, 4, and 3 games each. Then we can compare F to every team except NSH For them, just ignore or research solution
+#Could also look into comparing everyone with any icetime, but would definitely need to adjust that for different n
+#Or could do weighted gini by TOI
+```
+
+```{r isles cf and ca}
+ggplot(isles, aes(x = cf_60, y = ca_60)) + geom_point() + 
+  labs(x = "Corsi For Per 60", y = "Corsi Against Per 60") + 
+  theme_minimal() 
+#Need to clean up, add name labels, show for 1 position or at least with tiny TOI cut
+```
+
+
+```{r gini}
+f1 <- filter(dat2, position == "F", toi_position_rank <= 16)
+gini_f <- f1 %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"))
+#F gini CF is pretty high, and ones above it have clear stars or are TOR. That's ok if you're winning, problematic if not. 
+#F gini CA is more normal, so maybe systems there
+#WSH has 2 nothing guys who did nothing. Would like to cut them
+
+f1_all <- filter(dat2, position == "F")
+gini_f_all <- f1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"))
+
 ```
 
