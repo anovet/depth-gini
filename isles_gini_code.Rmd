@@ -17,7 +17,8 @@ require(janitor)
 ##Setup
 
 ```{r data load}
-dat1 <- read_csv("skater_stats_2018-02-07.csv") %>% clean_names()
+dat1 <- read_csv("Player Season Totals - Natural Stat Trick.csv") %>% clean_names() 
+#Credit NST
 
 dat2 <- select(dat1, player, team, position, gp, toi, cf_60, ca_60) %>%
   group_by(team) %>%
@@ -26,6 +27,16 @@ dat2 <- select(dat1, player, team, position, gp, toi, cf_60, ca_60) %>%
   group_by(team, position) %>%
   mutate(toi_position_rank = rank(-toi, ties.method = "random")) %>% ungroup()
 
+table(dat2$toi_rank) #NST successfully split traded players
+filter(dat2, position == "F") %>% select(toi_position_rank) %>% table(.)
+#For forwards, we start losing some teams at the 15th player (1 team has 13 only).
+
+sixteenth <- filter(dat2, toi_position_rank == 16)
+fullest <- anti_join(distinct(dat2, team), sixteenth)
+nsh <- filter(dat2, team == "NSH")
+#Yup, NSH 
+
 isles <- filter(dat2, team == "NYI")
+#Best F cutoff looks like the top 16, which is everyone except Dal Colle, Bernier, and Johnston, who have played 4, 4, and 3 games each. Then we can compare F to every team except NSH For them, just ignore or research solution
 ```
 
