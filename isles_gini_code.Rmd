@@ -13,6 +13,7 @@ require(tidyverse)
 require(ineq)
 require(janitor)
 require(ggthemes)
+require(acid)
 ```
 
 ##Setup
@@ -53,13 +54,15 @@ ggplot(isles, aes(x = cf_60, y = ca_60)) + geom_point() +
 
 ```{r gini}
 f1 <- filter(dat2, position == "F", toi_position_rank <= 16)
-gini_f <- f1 %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"))
+gini_f <- f1 %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"),
+                                              cf_weighted_gini = weighted.gini(cf_60, w = toi)$Gini, 
+                                              ca_weighted_gini = weighted.gini(ca_60, w = toi)$Gini))
 #F gini CF is pretty high, and ones above it have clear stars or are TOR. That's ok if you're winning, problematic if not. 
 #F gini CA is more normal, so maybe systems there
 #WSH has 2 nothing guys who did nothing. Would like to cut them
+#CF/60 is the rate at which they product, weighting shows how often they are getting that type of production
 
 f1_all <- filter(dat2, position == "F")
 gini_f_all <- f1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"))
 
 ```
-
