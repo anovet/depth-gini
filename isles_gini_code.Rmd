@@ -1,0 +1,18 @@
+---
+title: "Isles Gini"
+author: "Alex Novet"
+date: "February 6, 2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(library)
+require(ineq)
+```
+
+##Setup
+
+```{r data}
