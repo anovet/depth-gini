@@ -9,10 +9,23 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-require(library)
+require(tidyverse)
 require(ineq)
+require(janitor)
 ```
 
 ##Setup
 
-```{r data}
+```{r data load}
+dat1 <- read_csv("skater_stats_2018-02-07.csv") %>% clean_names()
+
+dat2 <- select(dat1, player, team, position, gp, toi, cf_60, ca_60) %>%
+  group_by(team) %>%
+  mutate(toi_rank = rank(-toi, ties.method = "random"),
+         position = ifelse(position %in% c("L", "C", "R"), "F", "D")) %>% ungroup() %>%
+  group_by(team, position) %>%
+  mutate(toi_position_rank = rank(-toi, ties.method = "random")) %>% ungroup()
+
+isles <- filter(dat2, team == "NYI")
+```
+
