@@ -41,7 +41,9 @@ fullest <- anti_join(distinct(dat2, team), sixteenth)
 nsh <- filter(dat2, team == "NSH")
 #Yup, NSH 
 
-isles <- filter(dat2, team == "NYI")
+isles <- filter(dat2, team == "NYI") %>% separate(player, into = c("first", "last"))
+isles$last <- gsub("Ho", "Ho-Sang", isles$last)
+isles$last <- gsub("Dal", "Dal Colle", isles$last)
 #Best F cutoff looks like the top 16, which is everyone except Dal Colle, Bernier, and Johnston, who have played 4, 4, and 3 games each. Then we can compare F to every team except NSH For them, just ignore or research solution
 #Could also look into comparing everyone with any icetime, but would definitely need to adjust that for different n
 #Or could do weighted gini by TOI
@@ -49,9 +51,9 @@ isles <- filter(dat2, team == "NYI")
 ```
 
 ```{r isles cf and ca}
-ggplot(filter(isles, position == "F"), aes(x = cf_60, y = ca_60)) + geom_point() + 
-  geom_text(aes(label=player),hjust=0, vjust=0) + geom_abline(intercept = 0, slope = 1) + 
-  labs(x = "Corsi For Per 60", y = "Corsi Against Per 60") + 
+ggplot(filter(isles, position == "F"), aes(x = cf_60, y = ca_60)) + geom_point() +
+  geom_text(aes(label=last),hjust=0, vjust=0) + geom_abline(intercept = 0, slope = 1) + 
+  labs(x = "Corsi For Per 60", y = "Corsi Against Per 60") + coord_cartesian(xlim = c(35, 80), ylim = c(35, 80)) +
   theme_minimal() 
 #Need to clean up, add name labels, show for 1 position or at least with tiny TOI cut, add a diagonal 50% line
 ```
@@ -113,7 +115,9 @@ gini_d_all <- d1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type
 
 
 ```{r gini plots}
-
+ggplot(gini_f, aes(x = reorder(team, cf_weighted_gini), y = cf_weighted_gini)) + geom_col() +
+  labs(title = "Corsi For Per 60 Weighted Gini", x = "Team", y = "Gini Coefficient (Higher = More Unequal Production)") +
+  coord_flip() + theme_minimal()
 ```
 
 
