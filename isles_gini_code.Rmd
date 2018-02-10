@@ -20,9 +20,10 @@ require(acid)
 
 ```{r data load}
 dat1 <- read_csv("Player Season Totals - Natural Stat Trick.csv") %>% clean_names() 
+dat1_counts <- read_csv("Player Season Totals - Natural Stat Trick_counts.csv") %>% clean_names() %>% dplyr::select(player, team, cf, ca, gf, ga)
 #Credit NST
 
-dat2 <- dplyr::select(dat1, player, team, position, gp, toi, cf_60, ca_60, gf_60, ga_60) %>%
+dat2 <- dplyr::select(dat1, player, team, position, gp, toi, cf_60, ca_60, gf_60, ga_60) %>% left_join(dat1_counts) %>% filter(!is.na(cf)) %>%
   group_by(team) %>%
   mutate(toi_rank = rank(-toi, ties.method = "random"),
          position = ifelse(position %in% c("L", "C", "R"), "F", "D")) %>% ungroup() %>%
@@ -62,7 +63,11 @@ gini_f <- f1 %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini
                                               cf_weighted_gini = weighted.gini(cf_60, w = toi)$Gini, 
                                               ca_weighted_gini = weighted.gini(ca_60, w = toi)$Gini,
                                               gf_weighted_gini = weighted.gini(gf_60, w = toi)$Gini, 
-                                              ga_weighted_gini = weighted.gini(ga_60, w = toi)$Gini)
+                                              ga_weighted_gini = weighted.gini(ga_60, w = toi)$Gini,
+                                              cf_raw_weighted_gini = weighted.gini(cf, w = toi)$Gini,
+                                              ca_raw_weighted_gini = weighted.gini(ca, w = toi)$Gini,
+                                              gf_raw_weighted_gini = weighted.gini(gf, w = toi)$Gini,
+                                              ga_raw_weighted_gini = weighted.gini(ga, w = toi)$Gini)
 #F gini CF is pretty high, and ones above it have clear stars or are TOR. That's ok if you're winning, problematic if not. 
 #F gini CA is more normal, so maybe systems there
 #WSH has 2 nothing guys who did nothing. Would like to cut them
@@ -73,7 +78,11 @@ gini_f_all <- f1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type
                                               cf_weighted_gini = weighted.gini(cf_60, w = toi)$Gini, 
                                               ca_weighted_gini = weighted.gini(ca_60, w = toi)$Gini,
                                               gf_weighted_gini = weighted.gini(gf_60, w = toi)$Gini, 
-                                              ga_weighted_gini = weighted.gini(ga_60, w = toi)$Gini)
+                                              ga_weighted_gini = weighted.gini(ga_60, w = toi)$Gini,
+                                              cf_raw_weighted_gini = weighted.gini(cf, w = toi)$Gini,
+                                              ca_raw_weighted_gini = weighted.gini(ca, w = toi)$Gini,
+                                              gf_raw_weighted_gini = weighted.gini(gf, w = toi)$Gini,
+                                              ga_raw_weighted_gini = weighted.gini(ga, w = toi)$Gini)
 
 
 
