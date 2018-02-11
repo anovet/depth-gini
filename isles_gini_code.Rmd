@@ -9,53 +9,59 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-require(tidyverse)
 require(ineq)
 require(janitor)
 require(ggthemes)
 require(acid)
+require(tidyverse)
 ```
 
 ##Setup
 
 ```{r data load}
+#Load data with both raw counts and rate info
 dat1 <- read_csv("Player Season Totals - Natural Stat Trick.csv") %>% clean_names() 
 dat1_counts <- read_csv("Player Season Totals - Natural Stat Trick_counts.csv") %>% clean_names() %>% dplyr::select(player, team, cf, ca, gf, ga)
-#Credit NST
 
+#Join data together, delete 1 missing entry, clean positions into F/D, rank players by TOI for the full team and their position
 dat2 <- dplyr::select(dat1, player, team, position, gp, toi, cf_60, ca_60, gf_60, ga_60) %>% left_join(dat1_counts) %>% filter(!is.na(cf)) %>%
   group_by(team) %>%
   mutate(toi_rank = rank(-toi, ties.method = "random"),
          position = ifelse(position %in% c("L", "C", "R"), "F", "D")) %>% ungroup() %>%
   group_by(team, position) %>%
-  mutate(toi_position_rank = rank(-toi, ties.method = "random")) %>% ungroup()
+  mutate(toi_position_rank = rank(-toi, ties.method = "random")) %>% ungroup() %>%
+  arrange(desc(cf_60))
 
+#Review players with real games played
 ranks <- filter( dat2, gp > 10) %>% arrange(desc(cf_60))
 
+#Quality check that the rankings look right
 table(dat2$toi_rank) #NST successfully split traded players
 filter(dat2, position == "F") %>% dplyr::select(toi_position_rank) %>% table(.)
-#For forwards, we start losing some teams at the 16th player (1 team has 13 only).
+#For forwards, we start losing some teams at the 16th player (1 team has 15 only, lucky them).
 
+#Which team has had the fewest forwards play?
 sixteenth <- filter(dat2, toi_position_rank == 16)
 fullest <- anti_join(distinct(dat2, team), sixteenth)
-nsh <- filter(dat2, team == "NSH")
-#Yup, NSH 
+#It's NSH, what does that look like?
+nsh <- filter(dat2, position == "F", team == "NSH")
 
-isles <- filter(dat2, team == "NYI") %>% separate(player, into = c("first", "last"))
-isles$last <- gsub("Ho", "Ho-Sang", isles$last)
-isles$last <- gsub("Dal", "Dal Colle", isles$last)
-#Best F cutoff looks like the top 16, which is everyone except Dal Colle, Bernier, and Johnston, who have played 4, 4, and 3 games each. Then we can compare F to every team except NSH For them, just ignore or research solution
-#Could also look into comparing everyone with any icetime, but would definitely need to adjust that for different n
-#Or could do weighted gini by TOI
-#Barzal sees time in both zones, see Bourne, so noshock he allows some. Tavares is equal but wins on sh%
+
 ```
 
 ```{r isles cf and ca}
-ggplot(filter(isles, position == "F"), aes(x = cf_60, y = ca_60)) + geom_point() +
-  geom_text(aes(label=last),hjust=0, vjust=0) + geom_abline(intercept = 0, slope = 1) + 
-  labs(x = "Corsi For Per 60", y = "Corsi Against Per 60") + coord_cartesian(xlim = c(35, 80), ylim = c(35, 80)) +
+#Now let's look at the Isles specifically (and clean up the sames for future viz)
+isles <- filter(dat2, team == "NYI") %>% separate(player, into = c("first", "last"))
+isles$last <- gsub("Ho", "Ho-Sang", isles$last)
+isles$last <- gsub("Dal", "Dal Colle", isles$last)
+#Best F cutoff looks like the top 16, which is everyone except Dal Colle, Bernier, and Johnston, who have played 4, 4, and 3 games each.
+
+#Plot shot performance (manually added labels later to avoid overlap)
+ggplot(filter(isles, position == "F", gp > 5), aes(x = cf_60, y = ca_60)) + geom_point() +
+  geom_text(aes(label=last),hjust=0, vjust=0) + 
+  geom_abline(intercept = 0, slope = 1) + 
+  labs(x = "Corsi For Per 60", y = "Corsi Against Per 60") + coord_cartesian(xlim = c(40, 80), ylim = c(40, 80)) +
   theme_minimal() 
-#Need to clean up, add name labels, show for 1 position or at least with tiny TOI cut, add a diagonal 50% line
 ```
 
 
@@ -86,12 +92,6 @@ gini_f_all <- f1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type
                                               gf_raw_weighted_gini = weighted.gini(gf, w = toi)$Gini,
                                               ga_raw_weighted_gini = weighted.gini(ga, w = toi)$Gini)
 
-
-
-
-
-
-
 ```
 
 
@@ -118,7 +118,14 @@ gini_d_all <- d1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type
 ggplot(gini_f, aes(x = reorder(team, cf_weighted_gini), y = cf_weighted_gini)) + geom_col() +
   labs(title = "Corsi For Per 60 Weighted Gini", x = "Team", y = "Gini Coefficient (Higher = More Unequal Production)") +
   coord_flip() + theme_minimal()
+
+ggplot(gini_f, aes(x = reorder(team, cf_weighted_gini), y = cf_weighted_gini)) + geom_col() +
+  labs(title = "Corsi For Per 60 Weighted Gini", x = "Team", y = "Gini Coefficient (Higher = More Unequal Production)") +
+  coord_flip() + theme_minimal()
 ```
 
+```{r rankings}
+top <- filter(dat2, gp > 10) %>% arrange(desc(cf_60))
+bottom <- arrange(top, cf_60)
 
-Should I do the whole thing with points?
+```

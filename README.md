@@ -1,4 +1,2 @@
 # depth-gini
-Athletic article on the impact of the Islanders' depth players
-
-This is a test intro line
+My first piece for The Athletic, this looks at the performance of the Islanders' forwards. The team seems to have elite talent at the top, but is being limited by its depth. Here, I used the gini coefficient to see whether this perception reflected an actual extreme disparity in performance or if the team has a typical spread of talent.  
