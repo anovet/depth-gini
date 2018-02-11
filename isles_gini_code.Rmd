@@ -66,6 +66,7 @@ ggplot(filter(isles, position == "F", gp > 5), aes(x = cf_60, y = ca_60)) + geom
 
 
 ```{r gini forwards}
+#Create limited forwards are run gini results. Focused most on CF/60
 f1 <- filter(dat2, position == "F", toi_position_rank <= 16)
 gini_f <- f1 %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"),
                                               cf_weighted_gini = weighted.gini(cf_60, w = toi)$Gini, 
@@ -76,11 +77,8 @@ gini_f <- f1 %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini
                                               ca_raw_weighted_gini = weighted.gini(ca, w = toi)$Gini,
                                               gf_raw_weighted_gini = weighted.gini(gf, w = toi)$Gini,
                                               ga_raw_weighted_gini = weighted.gini(ga, w = toi)$Gini)
-#F gini CF is pretty high, and ones above it have clear stars or are TOR. That's ok if you're winning, problematic if not. 
-#F gini CA is more normal, so maybe systems there
-#WSH has 2 nothing guys who did nothing. Would like to cut them
-#CF/60 is the rate at which they product, weighting shows how often they are getting that type of production
 
+#Repeat for full roster
 f1_all <- filter(dat2, position == "F")
 gini_f_all <- f1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"),
                                               cf_weighted_gini = weighted.gini(cf_60, w = toi)$Gini, 
@@ -101,6 +99,7 @@ gini_f_all <- f1_all %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type
 
 
 ```{r gini defense}
+#Repeat for defense
 d1 <- filter(dat2, position == "D", toi_position_rank <= 9) #Could do 8 and cut Aho
 gini_d <- d1 %>% group_by(team) %>% summarise(cf_gini = ineq(cf_60, type = "Gini"), ca_gini = ineq(ca_60, type = "Gini"),
                                               cf_weighted_gini = weighted.gini(cf_60, w = toi)$Gini, 
@@ -119,8 +118,8 @@ ggplot(gini_f, aes(x = reorder(team, cf_weighted_gini), y = cf_weighted_gini)) +
   labs(title = "Corsi For Per 60 Weighted Gini", x = "Team", y = "Gini Coefficient (Higher = More Unequal Production)") +
   coord_flip() + theme_minimal()
 
-ggplot(gini_f, aes(x = reorder(team, cf_weighted_gini), y = cf_weighted_gini)) + geom_col() +
-  labs(title = "Corsi For Per 60 Weighted Gini", x = "Team", y = "Gini Coefficient (Higher = More Unequal Production)") +
+ggplot(gini_f, aes(x = reorder(team, ca_weighted_gini), y = ca_weighted_gini)) + geom_col() +
+  labs(title = "Corsi Against Per 60 Weighted Gini", x = "Team", y = "Gini Coefficient (Higher = More Unequal Production)") +
   coord_flip() + theme_minimal()
 ```
 
